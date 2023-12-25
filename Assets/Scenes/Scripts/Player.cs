@@ -25,9 +25,6 @@ public class Player : MonoBehaviour
 
     public int sortingOrder = 0; // 設定顯示順序
 
-    [SerializeField]
-    private TableData mTableData;
-
     const float CardSpacing = 25f;
 
     private List<int> acceptCardNum = new List<int> { 1, 2, 5 };//單張、對子、順子鐵支 葫蘆
@@ -42,7 +39,9 @@ public class Player : MonoBehaviour
     {
         Main.Instance.OnSendCard += ReceiveHand;
 
-        mTableData.OnReportReceiveCard += GetReportReceiveCard;
+        Main.Instance.TableData.OnReportReceiveCard += GetReportReceiveCard;
+
+        //mTableData.OnReportReceiveCard += GetReportReceiveCard;
 
         cardDatas = new CardData[cardObjects.Length];
 
@@ -79,8 +78,10 @@ public class Player : MonoBehaviour
         Debug.Log("Card Clicked! cardID: " + cardID);
     }
 
-    public void ReceiveHand(List<Card> cards)
+    public void ReceiveHand(List<Card> cards,int ID)
     {
+        if (ID != 0) return;
+
         hand = cards;
 
         for (int i = 0; i < hand.Count; i++)
@@ -92,6 +93,8 @@ public class Player : MonoBehaviour
 
     public void onPlayerSendCard()
     {
+
+        if (_SelectCardIndex.Count == 0) return;
 
         _SelectCardData.Clear();
 
@@ -138,7 +141,7 @@ public class Player : MonoBehaviour
 
     private void MoveCardToTable(List<CardData> sendCardData)
     {
-        mTableData.GetSendData(sendCardData);
+        Main.Instance.TableData.GetSendData(sendCardData);
 
         _SelectCardIndex.Clear();
     }

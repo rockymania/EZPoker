@@ -68,6 +68,8 @@ public class CardLogic
             //如果數字大1就開始檢查順子
             if (tempCount + 1 == checkCardData[1].cardData.CompareRank)
             {
+                tempCount = checkCardData[1].cardData.CompareRank;
+
                 //判斷順子
                 for (int i = 2; i < checkCardData.Count; i++)
                 {

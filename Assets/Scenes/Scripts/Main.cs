@@ -35,19 +35,25 @@ public class Main : MonoBehaviour
     [SerializeField]
     private int mShuffleCount = 30;
 
-    public delegate void SendCardEvent(List<Card> handCard);
+    public delegate void SendCardEvent(List<Card> handCard,int ID);
     public event SendCardEvent OnSendCard;
 
     private List<Card> player1Hand = new List<Card>();
     private List<Card> player2Hand = new List<Card>();
 
-    
+    [SerializeField]
+    private TableData mTableData;
+
+    public TableData TableData { get { return mTableData; } }
+
+
     // Start is called before the first frame update
     void Start()
     {
 
         mPlayer.Init();
-
+        mBotPlayer.Init();
+        TableData.Init();
         // 初始化撲克牌
         InitializeDeck();
 
@@ -56,6 +62,28 @@ public class Main : MonoBehaviour
 
         // 發牌
         DealCards();
+
+        // 取得兩家最小的卡牌
+        Card player1MinCard = player1Hand.OrderBy(card => card.CompareRank).First();
+        Card player2MinCard = player2Hand.OrderBy(card => card.CompareRank).First(); 
+
+        Debug.Log($"player1MinCard - {player1MinCard.CompareRank} - {player1MinCard.Rank} - {player1MinCard.Suit}");
+        Debug.Log($"player2MinCard - {player2MinCard.CompareRank} - {player2MinCard.Rank} - {player2MinCard.Suit}");
+
+
+        if (player1MinCard.CompareRank == player2MinCard.CompareRank)
+        {
+            if (player1MinCard.Suit < player2MinCard.Suit)
+            {
+                NotifyPlayerPlayedCard();
+            }
+            else
+                NotifyBotPlayedCard();
+        }else if (player1MinCard.CompareRank < player2MinCard.CompareRank)
+        {
+            NotifyPlayerPlayedCard();
+        }else if (player1MinCard.CompareRank > player2MinCard.CompareRank)
+            NotifyBotPlayedCard();
     }
 
     private void DealCards()
@@ -74,14 +102,23 @@ public class Main : MonoBehaviour
                 player2Hand.Add(deck[i]);
             }
         }
-        // 使用 Sort 方法和 Lambda 表達式進行排序
-        //        player1Hand = player1Hand.OrderBy(card => card.Suit).ThenBy(card => card.Rank).ToList();
-
         player1Hand = player1Hand.OrderBy(card => card.Rank).ThenBy(card => card.Suit).ToList();
-        //player1Hand.Sort((card1, card2) => card1.Rank.CompareTo(card2.Rank));
+        player2Hand = player2Hand.OrderBy(card => card.Rank).ThenBy(card => card.Suit).ToList();
+        OnSendCard?.Invoke(player1Hand,0);
+        OnSendCard?.Invoke(player2Hand, 1);
+    }
 
-        OnSendCard?.Invoke(player1Hand);
-
+    private Card GetMinCard(List<Card> hand)
+    {
+        Card minCard = hand[0];
+        foreach (Card card in hand)
+        {
+            if (ranks.IndexOf(card.CompareRank) > ranks.IndexOf(minCard.CompareRank))
+            {
+                minCard = card;
+            }
+        }
+        return minCard;
     }
 
 
@@ -97,11 +134,6 @@ public class Main : MonoBehaviour
             {
                 deck.Add(new Card(compareRank[j] ,deck.Count + 1, ranks[j], currentSuit));
             }
-
-            //foreach (string rank in ranks)
-            //{
-            //    deck.Add(new Card(  deck.Count+1, rank, currentSuit));
-            //}
         }
     }
 
@@ -118,16 +150,18 @@ public class Main : MonoBehaviour
         }
     }
 
-    public void NotifyPlayerPlayedCard(Player player, Card card)
+    public void NotifyPlayerPlayedCard()
     {
         // 處理玩家出牌的通知，例如檢查是否符合規則，然後通知下一位玩家
         // ...
+        mTableData.SetArrowImage(0);
     }
 
-    public void NotifyBotPlayedCard(BotPlayer botPlayer, Card card)
+    public void NotifyBotPlayedCard()
     {
         // 處理 Bot 出牌的通知，例如檢查是否符合規則，然後通知下一位玩家
         // ...
+        mTableData.SetArrowImage(1);
     }
 
 

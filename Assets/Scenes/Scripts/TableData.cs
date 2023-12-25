@@ -23,10 +23,34 @@ public class TableData : MonoBehaviour
     public event ReportReceiveCardEvent OnReportReceiveCard;
 
     //出牌邏輯判斷
-    private CardLogic cardLogic;
+    private CardLogic cardLogic = new CardLogic();
 
     //出過的卡牌要移動的位置
     private const int mLastCardSpceing = -50;
+
+    [SerializeField]
+    private GameObject _UpImageObj;
+    [SerializeField]
+    private GameObject _DownImageObj;
+
+
+    public void Init()
+    {
+        SetArrowImage(-1);
+    }
+
+    public void SetArrowImage(int kind)
+    {
+        _UpImageObj.SetActive(false);
+        _DownImageObj.SetActive(false);
+
+        if(kind == 0)
+            _DownImageObj.SetActive(true);
+        else if(kind == 1)
+            _UpImageObj.SetActive(true);
+
+
+    }
 
     //桌上卡牌的結構
     public class TableCard

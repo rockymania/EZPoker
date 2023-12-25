@@ -50,13 +50,16 @@ public class CardData : MonoBehaviour
     }
 
 
-    public void SetCardData(Card card)
+    public void SetCardData(Card card,bool isShowBack = false)
     {
         mCardData = card;
 
         string loadString = mCardData.Number.ToString("D2");
 
         CardSprite.sprite = Resources.Load<Sprite>(loadString);
+
+        if(isShowBack)
+            CardSprite.sprite = Resources.Load<Sprite>("back");
 
         cardButton = gameObject.AddComponent<Button>();
 
@@ -66,6 +69,7 @@ public class CardData : MonoBehaviour
 
         SetCardActive(true);
     }
+
 
     private void CardClick()
     {
