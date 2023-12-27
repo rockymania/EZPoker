@@ -1,4 +1,5 @@
 using DG.Tweening;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,12 @@ using UnityEngine.UI;
 using static GameData;
 public class Player : MonoBehaviour
 {
+    public int ID = 0;
+
+
+    public delegate void SendCardToMainEvent(List<CardData> sendCardData);
+    public SendCardToMainEvent OnSendCardToMain;
+
     private List<Card> hand = new List<Card>();
 
     [SerializeField]
@@ -23,14 +30,13 @@ public class Player : MonoBehaviour
     [SerializeField]
     private GameObject mCardPlate;
 
-    public int sortingOrder = 0; // 設定顯示順序
-
     const float CardSpacing = 25f;
 
     private List<int> acceptCardNum = new List<int> { 1, 2, 5 };//單張、對子、順子鐵支 葫蘆
 
     private CardLogic CardLogic = new CardLogic();
 
+    private int mNowSendCardID = -1;
     private void Start()
     {
 
@@ -41,7 +47,9 @@ public class Player : MonoBehaviour
 
         Main.Instance.TableData.OnReportReceiveCard += GetReportReceiveCard;
 
-        //mTableData.OnReportReceiveCard += GetReportReceiveCard;
+        Main.Instance.OnNotifyPlayerReadySendCardEvent += GetNotifiSendCard;
+
+        Main.Instance.OnNotifiWinner += GetNotifiWinner;
 
         cardDatas = new CardData[cardObjects.Length];
 
@@ -51,6 +59,16 @@ public class Player : MonoBehaviour
             cardDatas[i].Reset();
             cardDatas[i].OnCardClick += OnCardClicked;// 註冊卡牌點擊事件
         }
+    }
+
+    private void GetNotifiWinner(int id)
+    {
+        Debug.Log("勝利者產生");
+    }
+
+    private void GetNotifiSendCard(int id)
+    {
+        mNowSendCardID = id;
     }
 
     private void GetReportReceiveCard(bool isOk)
@@ -74,7 +92,6 @@ public class Player : MonoBehaviour
             _SelectCardIndex.Remove(cardID);
         }
 
-        // 卡牌被點擊時的邏輯
         Debug.Log("Card Clicked! cardID: " + cardID);
     }
 
@@ -96,6 +113,8 @@ public class Player : MonoBehaviour
 
         if (_SelectCardIndex.Count == 0) return;
 
+        if (mNowSendCardID != ID) return;
+
         _SelectCardData.Clear();
 
         //取得要出牌的物件
@@ -110,9 +129,12 @@ public class Player : MonoBehaviour
 
             _SelectCardData.Add(cardData);
         }
+        CheckCardLogin checkCardLogin = new CheckCardLogin();
 
-        if (!CardLogic.SendCardLogic(_SelectCardData))
-            return;
+        checkCardLogin = CardLogic.SendCardLogic(_SelectCardData);
+
+        if (!checkCardLogin.SendCardLogic) return;
+
 
         _SelectCardData = _SelectCardData.OrderBy(cardData => cardData.cardData.CompareRank)
                                  .ThenBy(cardData => cardData.cardData.Rank)
@@ -141,8 +163,11 @@ public class Player : MonoBehaviour
 
     private void MoveCardToTable(List<CardData> sendCardData)
     {
-        Main.Instance.TableData.GetSendData(sendCardData);
+        OnSendCardToMain?.Invoke(sendCardData);
+    }
 
+    public void ClearSelectCardIndex()
+    {
         _SelectCardIndex.Clear();
     }
 

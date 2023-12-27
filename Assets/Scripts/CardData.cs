@@ -25,6 +25,7 @@ public class CardData : MonoBehaviour
 
     private CanvasGroup canvasGroup;
 
+    private bool isListenerAdded = false;
 
     public void FadeOut(float duration, float targetAlpha)
     {
@@ -61,10 +62,12 @@ public class CardData : MonoBehaviour
         if(isShowBack)
             CardSprite.sprite = Resources.Load<Sprite>("back");
 
-        cardButton = gameObject.AddComponent<Button>();
-
-        cardButton.onClick.AddListener(CardClick);
-
+        if (!isListenerAdded)
+        {
+            cardButton = gameObject.AddComponent<Button>();
+            cardButton.onClick.AddListener(CardClick);
+            isListenerAdded = true;
+        }
         mIsSelect = false;
 
         SetCardActive(true);

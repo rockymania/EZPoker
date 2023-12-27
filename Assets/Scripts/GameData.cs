@@ -31,4 +31,30 @@ public class GameData : MonoBehaviour
             Suit = suit;
         }
     }
+    public enum CardType
+    {
+        None,
+        Single,
+        Pair,
+        Straight,
+        FullHouse,
+        IronCard,
+    }
+    public class CheckCardLogin
+    {
+        public bool SendCardLogic = false;
+        public CardType SendCardType = CardType.None;
+    }
+    //桌上卡牌的結構
+    public class TableCard
+    {
+        public GameObject cardObj;
+        public CardData cardData;
+    }
+
+    public class SelectSendCard
+    {
+        public int Number = 99;
+        public CardData cardData;
+    }
 }

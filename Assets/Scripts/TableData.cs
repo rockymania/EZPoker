@@ -2,6 +2,7 @@ using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static GameData;
 
 public class TableData : MonoBehaviour
 {
@@ -13,11 +14,12 @@ public class TableData : MonoBehaviour
     public float fadedAlpha = 0.5f; // 透明度變化的目標值
 
     //傳送進來的卡牌存的地方
-    private List<TableCard> cardList = new List<TableCard>();
+    private List<TableCard> mCardList = new List<TableCard>();
     //之前傳送近來存的地方
-    private List<TableCard> lastCardList = new List<TableCard>();
+    private List<TableCard> mLastCardList = new List<TableCard>();
 
-    
+    public List<TableCard> nowTableCardList { get { return mCardList; } }
+
     //判斷牌是否可以出牌後的Event
     public delegate void ReportReceiveCardEvent(bool isOk);
     public event ReportReceiveCardEvent OnReportReceiveCard;
@@ -33,7 +35,9 @@ public class TableData : MonoBehaviour
     [SerializeField]
     private GameObject _DownImageObj;
 
+    private CardType mCardType = CardType.None;
 
+    public CardType nowTableCardType { get { return mCardType; } }
     public void Init()
     {
         SetArrowImage(-1);
@@ -52,12 +56,8 @@ public class TableData : MonoBehaviour
 
     }
 
-    //桌上卡牌的結構
-    public class TableCard
-    {
-        public GameObject cardObj;
-        public CardData cardData;
-    }
+    
+
 
     /// <summary>
     /// 接受到玩家丟牌
@@ -65,13 +65,25 @@ public class TableData : MonoBehaviour
     /// <param name="sendCardData"></param>
     public void GetSendData(List<CardData> sendCardData)
     {
-        //一樣檢查
-        if (!cardLogic.SendCardLogic(sendCardData))
+        if(sendCardData == null)
+        {
+            mCardType = CardType.None;
+            return;
+        }
+
+        CheckCardLogin checkCardLogin = new CheckCardLogin();
+
+        checkCardLogin = cardLogic.SendCardLogic(sendCardData);
+
+        if(mCardType != CardType.None)
+        if (!checkCardLogin.SendCardLogic || mCardType != checkCardLogin.SendCardType )
         {
             //有錯誤
             OnReportReceiveCard?.Invoke(false);
             return;
         }
+
+        mCardType = checkCardLogin.SendCardType;
 
         //可以出牌
         OnReportReceiveCard?.Invoke(true);
@@ -86,9 +98,9 @@ public class TableData : MonoBehaviour
     public void CreateCardInTable(List<CardData> sendCardData)
     {
 
-        lastCardList.AddRange(cardList);
+        mLastCardList.AddRange(mCardList);
 
-        cardList = new List<TableCard>();
+        mCardList = new List<TableCard>();
 
         for (int i = 0; i < sendCardData.Count;i++)
         {
@@ -100,7 +112,7 @@ public class TableData : MonoBehaviour
             tempObj.cardData.Reset();
             tempObj.cardData.SetCardData(sendCardData[i].cardData);
 
-            cardList.Add(tempObj);
+            mCardList.Add(tempObj);
         }
 
         UpdateCardPositionsAndAlpha();
@@ -115,22 +127,39 @@ public class TableData : MonoBehaviour
         //牌跟牌之間的距離
         float spacing = 20f;
 
-        for (int i = 0; i < lastCardList.Count; i++)
+        for (int i = 0; i < mLastCardList.Count; i++)
         {
-            float targetX = (i - cardList.Count - lastCardList.Count) * spacing;
+            float targetX = (i - mCardList.Count - mLastCardList.Count) * spacing;
 
-            lastCardList[i].cardObj.transform.DOLocalMoveX(mLastCardSpceing + targetX, moveDuration);
+            mLastCardList[i].cardObj.transform.DOLocalMoveX(mLastCardSpceing + targetX, moveDuration);
 
             //透明
-            lastCardList[i].cardData.FadeOut(fadeDuration, fadedAlpha);
+            mLastCardList[i].cardData.FadeOut(fadeDuration, fadedAlpha);
         }
 
-        for (int i = 0; i < cardList.Count; i++)
+        for (int i = 0; i < mCardList.Count; i++)
         {
             float targetX = i * spacing;
 
-            cardList[i].cardObj.transform.localPosition = new Vector3(targetX, 0, 0);
-            cardList[i].cardObj.transform.DOLocalMoveX(targetX, moveDuration);
+            mCardList[i].cardObj.transform.localPosition = new Vector3(targetX, 0, 0);
+            mCardList[i].cardObj.transform.DOLocalMoveX(targetX, moveDuration);
         }
     }
+
+    public void Reset()
+    {
+        mCardType = CardType.None;
+        mCardList = new List<TableCard>();
+        mLastCardList = new List<TableCard>();
+        if (_DownImageObj != null)
+            _DownImageObj.SetActive(false);
+        if (_UpImageObj != null)
+            _UpImageObj.SetActive(false);
+
+        foreach (Transform child in cardSpawnPoint)
+        {
+            Destroy(child.gameObject); // 或使用 DestroyImmediate(child.gameObject);
+        }
+    }
+
 }

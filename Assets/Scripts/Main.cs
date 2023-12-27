@@ -7,6 +7,16 @@ using static GameData;
 
 public class Main : MonoBehaviour
 {
+    public delegate void NotifyPlayerReadySendCardEvent(int id);
+    public event NotifyPlayerReadySendCardEvent OnNotifyPlayerReadySendCardEvent;
+
+    public delegate void NotifyWinnerEvent(int id);
+    public event NotifyWinnerEvent OnNotifiWinner;
+
+    public delegate void PlayerSendCardEvent();
+    public event PlayerSendCardEvent OnPlayerSendCard;
+
+
     [SerializeField]
     private Player mPlayer;
 
@@ -47,6 +57,9 @@ public class Main : MonoBehaviour
     public TableData TableData { get { return mTableData; } }
 
 
+    [SerializeField]
+    private int SendCardID = 0;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -54,6 +67,19 @@ public class Main : MonoBehaviour
         mPlayer.Init();
         mBotPlayer.Init();
         TableData.Init();
+
+        mPlayer.OnSendCardToMain += GetPlayerSendCardEvent;
+        mBotPlayer.OnBotSendCardToMain += GetBotPlayerSendCardEvent;
+        mBotPlayer.OnBotSendPass += GetBotSendPass;
+
+        NewGame();
+
+    }
+
+    private void NewGame()
+    {
+        mTableData.Reset();
+        
         // 初始化撲克牌
         InitializeDeck();
 
@@ -65,7 +91,7 @@ public class Main : MonoBehaviour
 
         // 取得兩家最小的卡牌
         Card player1MinCard = player1Hand.OrderBy(card => card.CompareRank).First();
-        Card player2MinCard = player2Hand.OrderBy(card => card.CompareRank).First(); 
+        Card player2MinCard = player2Hand.OrderBy(card => card.CompareRank).First();
 
         Debug.Log($"player1MinCard - {player1MinCard.CompareRank} - {player1MinCard.Rank} - {player1MinCard.Suit}");
         Debug.Log($"player2MinCard - {player2MinCard.CompareRank} - {player2MinCard.Rank} - {player2MinCard.Suit}");
@@ -75,17 +101,105 @@ public class Main : MonoBehaviour
         {
             if (player1MinCard.Suit < player2MinCard.Suit)
             {
-                NotifyPlayerPlayedCard();
+                StartCoroutine(delaySend(0));
             }
             else
-                NotifyBotPlayedCard();
-        }else if (player1MinCard.CompareRank < player2MinCard.CompareRank)
+                StartCoroutine(delaySend(1));
+        }
+        else if (player1MinCard.CompareRank < player2MinCard.CompareRank)
         {
-            NotifyPlayerPlayedCard();
-        }else if (player1MinCard.CompareRank > player2MinCard.CompareRank)
-            NotifyBotPlayedCard();
+            StartCoroutine(delaySend(0));
+        }
+        else if (player1MinCard.CompareRank > player2MinCard.CompareRank)
+            StartCoroutine(delaySend(1));
+
+
     }
 
+    private void GetBotSendPass()
+    {
+        NotifyPlayerPlayedCard(0);
+        mTableData.GetSendData(null);
+    }
+
+    private IEnumerator delaySend(int id)
+    {
+
+        yield return new WaitForSeconds(1.0f);
+        NotifyPlayerPlayedCard(id);
+    }
+
+    private IEnumerator WaitForSecond2()
+    {
+
+        yield return new WaitForSeconds(1.0f);
+        NewGame();
+    }
+
+
+    private void GetBotPlayerSendCardEvent(List<CardData> sendData)
+    {
+        //檢查身上是否有這些卡牌
+        foreach (var data in sendData)
+        {
+            if (!player2Hand.Contains(data.cardData))
+            {
+                Debug.Log("錯誤，有找不到的卡牌資料");
+                return;
+            }
+        }
+
+        mTableData.GetSendData(sendData);
+
+        foreach (var data in sendData)
+            player2Hand.Remove(data.cardData);
+
+
+        //mPlayer.ClearSelectCardIndex();
+
+        if (player2Hand.Count > 0)
+        {
+            NotifyPlayerPlayedCard(0);
+        }else
+        {
+            NotiftWinner(1);
+        }
+
+    }
+
+    /// <summary>
+    /// 接收到傳過來的卡牌
+    /// </summary>
+    /// <param name="sendData"></param>
+    private void GetPlayerSendCardEvent(List<CardData> sendData)
+    {
+        //檢查身上是否有這些卡牌
+        foreach(var data in sendData)
+        {
+            if(!player1Hand.Contains(data.cardData))
+            {
+                Debug.Log("錯誤，有找不到的卡牌資料");
+                return;
+            }
+        }
+
+        mTableData.GetSendData(sendData);
+
+        foreach(var data in sendData)
+            player1Hand.Remove(data.cardData);
+
+
+        mPlayer.ClearSelectCardIndex();
+
+        if(player1Hand.Count > 0)
+        {
+            NotifyPlayerPlayedCard(1);
+        }else
+        {
+            NotiftWinner(0);
+        }
+
+    }
     private void DealCards()
     {
         player1Hand.Clear();
@@ -150,24 +264,19 @@ public class Main : MonoBehaviour
         }
     }
 
-    public void NotifyPlayerPlayedCard()
+    public void NotifyPlayerPlayedCard(int sendCardID)
     {
         // 處理玩家出牌的通知，例如檢查是否符合規則，然後通知下一位玩家
         // ...
-        mTableData.SetArrowImage(0);
+        mTableData.SetArrowImage(sendCardID);
+
+        OnNotifyPlayerReadySendCardEvent?.Invoke(sendCardID);
     }
 
-    public void NotifyBotPlayedCard()
+    public void NotiftWinner(int id)
     {
-        // 處理 Bot 出牌的通知，例如檢查是否符合規則，然後通知下一位玩家
-        // ...
-        mTableData.SetArrowImage(1);
+        OnNotifiWinner?.Invoke(id);
+        StartCoroutine(WaitForSecond2());
     }
 
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
