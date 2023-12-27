@@ -704,7 +704,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 348, y: 219}
+  m_AnchoredPosition: {x: 348, y: -206}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &297006151
@@ -1297,6 +1297,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2f13097402af2a49bef941173bad67d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ID: 1
   cardObjects:
   - {fileID: 1269255045}
   - {fileID: 2094365181}
@@ -1315,7 +1316,6 @@ MonoBehaviour:
   _SelectCardData: []
   mCardPlate: {fileID: 272406350}
   sortingOrder: 0
-  mTableData: {fileID: 1021511278}
 --- !u!1 &911751186
 GameObject:
   m_ObjectHideFlags: 0
@@ -1606,6 +1606,7 @@ MonoBehaviour:
   mBotPlayer: {fileID: 803228203}
   mShuffleCount: 30
   mTableData: {fileID: 1021511278}
+  SendCardID: 1
 --- !u!1 &973187226
 GameObject:
   m_ObjectHideFlags: 0
@@ -2081,7 +2082,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1211071341}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 963194229}
+        m_TargetAssemblyTypeName: Main, Assembly-CSharp
+        m_MethodName: NotiftWinner
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1211071341
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2597,6 +2610,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8536ee30acdb8a64abb9d72efecda7b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ID: 0
   cardObjects:
   - {fileID: 1418737451}
   - {fileID: 73279117}
@@ -2614,8 +2628,6 @@ MonoBehaviour:
   _SelectCardIndex: 
   _SelectCardData: []
   mCardPlate: {fileID: 2027306572}
-  sortingOrder: 0
-  mTableData: {fileID: 1021511278}
 --- !u!224 &1493164587
 RectTransform:
   m_ObjectHideFlags: 0
